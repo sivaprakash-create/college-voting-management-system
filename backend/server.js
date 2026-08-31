@@ -18,6 +18,8 @@ app.use(express.urlencoded({ extended: true }));
 // Enable CORS for frontend integration
 app.use(cors());
 
+const path = require('path');
+
 // Mount API Routes
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/students', require('./routes/studentRoutes'));
@@ -30,10 +32,18 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'College Voting System API running smoothly' });
 });
 
-// Root fallback
-app.get('/', (req, res) => {
-  res.send('College Online Voting System API is running. Access endpoints via /api/');
-});
+// Serve static frontend in production
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '../frontend/dist')));
+  app.get('*', (req, res) => {
+    res.sendFile(path.resolve(__dirname, '../frontend/dist', 'index.html'));
+  });
+} else {
+  // Root fallback for development
+  app.get('/', (req, res) => {
+    res.send('College Online Voting System API is running. Access endpoints via /api/');
+  });
+}
 
 // Global Error Handler
 app.use((err, req, res, next) => {
